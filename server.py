@@ -1,33 +1,27 @@
 # server.py
-import socket
-import threading
+import asyncio
+import websockets
 
-clients = []
+connected = set()
 
-def handle_client(client):
-    while True:
-        try:
-            msg = client.recv(1024).decode()
-            if msg:
-                print(msg)
-                for c in clients:
-                    if c != client:
-                        c.send(msg.encode())
-            else:
-                clients.remove(client)
-                client.close()
-                break
-        except:
-            clients.remove(client)
-            client.close()
-            break
+async def handler(websocket, path):
+    # Add new client to the connected set
+    connected.add(websocket)
+    try:
+        async for message in websocket:
+            # Broadcast message to all connected clients
+            for conn in connected:
+                if conn != websocket:
+                    await conn.send(message)
+            print(message)
+    except:
+        pass
+    finally:
+        connected.remove(websocket)
 
-server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server.bind(("0.0.0.0", 5000))
-server.listen(5)
-print("Server listening on port 5000...")
+# Run the server on 0.0.0.0 and port 10000
+start_server = websockets.serve(handler, "0.0.0.0", 10000)
 
-while True:
-    client, addr = server.accept()
-    clients.append(client)
-    threading.Thread(target=handle_client, args=(client,)).start()
+print("Server running on port 10000...")
+asyncio.get_event_loop().run_until_complete(start_server)
+asyncio.get_event_loop().run_forever()

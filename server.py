@@ -20,7 +20,7 @@ async def handler(websocket, path):
         connected.remove(websocket)
 
 # Run the server on 0.0.0.0 and port 10000
-start_server = websockets.serve(handler, "0.0.0.0", 10000)
+start_server = websockets.serve(handler, "0.0.0.0", 443)
 
 print("Server running on port 10000...")
 asyncio.get_event_loop().run_until_complete(start_server)
